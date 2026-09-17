@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.taskora.backend.task.dto.CommentResponse;
+import com.taskora.backend.task.dto.CreateCommentRequest;
 import com.taskora.backend.task.dto.CreateSubtaskRequest;
 import com.taskora.backend.task.dto.CreateTaskRequest;
 import com.taskora.backend.task.dto.SubtaskResponse;
@@ -30,6 +32,7 @@ public class TaskController {
 
     private final TaskService taskService;
     private final SubtaskService subtaskService;
+    private final CommentService commentService;
 
     @PostMapping
     public ResponseEntity<TaskResponse> createTask(
@@ -73,6 +76,15 @@ public class TaskController {
             @Valid @RequestBody CreateSubtaskRequest request
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(subtaskService.createSubtask(currentUser, id, request));
+    }
+
+    @PostMapping("/{id}/comments")
+    public ResponseEntity<CommentResponse> addComment(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable Long id,
+            @Valid @RequestBody CreateCommentRequest request
+    ) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(commentService.addComment(currentUser, id, request));
     }
 
 }

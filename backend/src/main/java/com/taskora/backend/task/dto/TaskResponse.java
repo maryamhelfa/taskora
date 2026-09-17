@@ -21,6 +21,7 @@ public record TaskResponse(
         LocalDate dueDate,
         Instant createdAt,
         Instant updatedAt,
-        List<SubtaskResponse> subtasks
+        List<SubtaskResponse> subtasks,
+        List<CommentResponse> comments
 ) {
 }

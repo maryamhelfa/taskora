@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.taskora.backend.activity.ActivityLogService;
 import com.taskora.backend.exception.ForbiddenActionException;
 import com.taskora.backend.exception.ResourceNotFoundException;
 import com.taskora.backend.project.Project;
@@ -36,6 +37,9 @@ class TaskServiceTest {
     private SubtaskRepository subtaskRepository;
 
     @Mock
+    private CommentRepository commentRepository;
+
+    @Mock
     private ProjectRepository projectRepository;
 
     @Mock
@@ -44,11 +48,14 @@ class TaskServiceTest {
     @Mock
     private TeamMemberRepository teamMemberRepository;
 
+    @Mock
+    private ActivityLogService activityLogService;
+
     private TaskService taskService;
 
     private TaskService newTaskService() {
-        return new TaskService(taskRepository, subtaskRepository, projectRepository, userRepository,
-                new TeamAccessService(teamMemberRepository));
+        return new TaskService(taskRepository, subtaskRepository, commentRepository, projectRepository, userRepository,
+                new TeamAccessService(teamMemberRepository), activityLogService);
     }
 
     private User user(long id) {
@@ -70,6 +77,7 @@ class TaskServiceTest {
         when(projectRepository.findById(20L)).thenReturn(Optional.of(project));
         when(teamMemberRepository.existsByTeamIdAndUserId(10L, 1L)).thenReturn(true);
         when(subtaskRepository.findAllByTaskId(null)).thenReturn(List.of());
+        when(commentRepository.findAllByTaskIdOrderByCreatedAtAsc(null)).thenReturn(List.of());
 
         TaskResponse response = taskService.createTask(user, request);
 
@@ -124,6 +132,7 @@ class TaskServiceTest {
         when(taskRepository.findById(30L)).thenReturn(Optional.of(task));
         when(teamMemberRepository.existsByTeamIdAndUserId(10L, 1L)).thenReturn(true);
         when(subtaskRepository.findAllByTaskId(30L)).thenReturn(List.of());
+        when(commentRepository.findAllByTaskIdOrderByCreatedAtAsc(30L)).thenReturn(List.of());
 
         TaskResponse response = taskService.updateStatus(user, 30L, request);
 
@@ -154,6 +163,7 @@ class TaskServiceTest {
         when(teamMemberRepository.existsByTeamIdAndUserId(10L, 1L)).thenReturn(true);
         when(taskRepository.findAllByProjectId(20L)).thenReturn(List.of(task));
         when(subtaskRepository.findAllByTaskId(30L)).thenReturn(List.of(subtask));
+        when(commentRepository.findAllByTaskIdOrderByCreatedAtAsc(30L)).thenReturn(List.of());
 
         List<TaskResponse> response = taskService.listTasksForProject(user, 20L);
 

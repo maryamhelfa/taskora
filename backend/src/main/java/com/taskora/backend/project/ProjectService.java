@@ -5,6 +5,8 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.taskora.backend.activity.ActivityActionType;
+import com.taskora.backend.activity.ActivityLogService;
 import com.taskora.backend.exception.ResourceNotFoundException;
 import com.taskora.backend.project.dto.CreateProjectRequest;
 import com.taskora.backend.project.dto.ProjectResponse;
@@ -26,6 +28,7 @@ public class ProjectService {
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
     private final TeamAccessService teamAccessService;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> listProjects(User currentUser, Long teamId) {
@@ -54,6 +57,9 @@ public class ProjectService {
                 .build();
         projectRepository.save(project);
 
+        activityLogService.log(currentUser, project, null, ActivityActionType.PROJECT_CREATED,
+                "Projet cree : " + project.getName());
+
         return toProjectResponse(project);
     }
 
@@ -61,11 +67,26 @@ public class ProjectService {
         Project project = findProjectOrThrow(projectId);
         teamAccessService.requireMembership(project.getTeam().getId(), currentUser.getId());
 
+        ProjectStatus previousStatus = project.getStatus();
+
         project.setName(request.name());
         project.setDescription(request.description());
         project.setStatus(request.status());
 
+        activityLogService.log(currentUser, project, null, ActivityActionType.PROJECT_UPDATED,
+                buildProjectUpdateDescription(project, previousStatus, request.status()));
+
         return toProjectResponse(project);
+    }
+
+    private String buildProjectUpdateDescription(Project project, ProjectStatus previousStatus, ProjectStatus newStatus) {
+        if (newStatus == ProjectStatus.ARCHIVED && previousStatus != ProjectStatus.ARCHIVED) {
+            return "Projet archive : " + project.getName();
+        }
+        if (previousStatus == ProjectStatus.ARCHIVED && newStatus != ProjectStatus.ARCHIVED) {
+            return "Projet reactive : " + project.getName();
+        }
+        return "Projet modifie : " + project.getName();
     }
 
     public void deleteProject(User currentUser, Long projectId) {

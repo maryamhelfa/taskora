@@ -5,10 +5,13 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import com.taskora.backend.activity.ActivityActionType;
+import com.taskora.backend.activity.ActivityLogService;
 import com.taskora.backend.exception.ForbiddenActionException;
 import com.taskora.backend.exception.ResourceNotFoundException;
 import com.taskora.backend.project.Project;
 import com.taskora.backend.project.ProjectRepository;
+import com.taskora.backend.task.dto.CommentResponse;
 import com.taskora.backend.task.dto.CreateTaskRequest;
 import com.taskora.backend.task.dto.SubtaskResponse;
 import com.taskora.backend.task.dto.TaskResponse;
@@ -27,9 +30,11 @@ public class TaskService {
 
     private final TaskRepository taskRepository;
     private final SubtaskRepository subtaskRepository;
+    private final CommentRepository commentRepository;
     private final ProjectRepository projectRepository;
     private final UserRepository userRepository;
     private final TeamAccessService teamAccessService;
+    private final ActivityLogService activityLogService;
 
     @Transactional(readOnly = true)
     public List<TaskResponse> listTasksForProject(User currentUser, Long projectId) {
@@ -55,6 +60,9 @@ public class TaskService {
                 .build();
         taskRepository.save(task);
 
+        activityLogService.log(currentUser, project, task, ActivityActionType.TASK_CREATED,
+                "Tache creee : " + task.getTitle());
+
         return toTaskResponse(task);
     }
 
@@ -71,19 +79,32 @@ public class TaskService {
         task.setAssignee(assignee);
         task.setDueDate(request.dueDate());
 
+        activityLogService.log(currentUser, task.getProject(), task, ActivityActionType.TASK_UPDATED,
+                "Tache modifiee : " + task.getTitle());
+
         return toTaskResponse(task);
     }
 
     public TaskResponse updateStatus(User currentUser, Long taskId, UpdateTaskStatusRequest request) {
         Task task = findTaskOrThrow(taskId);
         teamAccessService.requireMembership(task.getProject().getTeam().getId(), currentUser.getId());
+
+        TaskStatus previousStatus = task.getStatus();
         task.setStatus(request.status());
+
+        activityLogService.log(currentUser, task.getProject(), task, ActivityActionType.TASK_STATUS_CHANGED,
+                "Statut de la tache '" + task.getTitle() + "' change : " + previousStatus + " -> " + request.status());
+
         return toTaskResponse(task);
     }
 
     public void deleteTask(User currentUser, Long taskId) {
         Task task = findTaskOrThrow(taskId);
         teamAccessService.requireMembership(task.getProject().getTeam().getId(), currentUser.getId());
+
+        activityLogService.log(currentUser, task.getProject(), null, ActivityActionType.TASK_DELETED,
+                "Tache supprimee : " + task.getTitle());
+
         taskRepository.delete(task);
     }
 
@@ -114,6 +135,18 @@ public class TaskService {
         List<SubtaskResponse> subtasks = subtaskRepository.findAllByTaskId(task.getId()).stream()
                 .map(subtask -> new SubtaskResponse(subtask.getId(), subtask.getTask().getId(), subtask.getTitle(), subtask.isDone()))
                 .toList();
+        List<CommentResponse> comments = commentRepository.findAllByTaskIdOrderByCreatedAtAsc(task.getId()).stream()
+                .map(comment -> new CommentResponse(
+                        comment.getId(),
+                        comment.getTask().getId(),
+                        comment.getAuthor().getId(),
+                        comment.getAuthor().getEmail(),
+                        comment.getAuthor().getFirstName(),
+                        comment.getAuthor().getLastName(),
+                        comment.getContent(),
+                        comment.getCreatedAt()
+                ))
+                .toList();
 
         return new TaskResponse(
                 task.getId(),
@@ -129,7 +162,8 @@ public class TaskService {
                 task.getDueDate(),
                 task.getCreatedAt(),
                 task.getUpdatedAt(),
-                subtasks
+                subtasks,
+                comments
         );
     }
 

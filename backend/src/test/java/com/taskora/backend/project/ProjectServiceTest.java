@@ -12,6 +12,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import com.taskora.backend.activity.ActivityLogService;
 import com.taskora.backend.exception.ForbiddenActionException;
 import com.taskora.backend.exception.ResourceNotFoundException;
 import com.taskora.backend.project.dto.CreateProjectRequest;
@@ -35,10 +36,14 @@ class ProjectServiceTest {
     @Mock
     private TeamMemberRepository teamMemberRepository;
 
+    @Mock
+    private ActivityLogService activityLogService;
+
     private ProjectService projectService;
 
     private ProjectService newProjectService() {
-        return new ProjectService(projectRepository, teamRepository, teamMemberRepository, new TeamAccessService(teamMemberRepository));
+        return new ProjectService(projectRepository, teamRepository, teamMemberRepository,
+                new TeamAccessService(teamMemberRepository), activityLogService);
     }
 
     private User user(long id) {
