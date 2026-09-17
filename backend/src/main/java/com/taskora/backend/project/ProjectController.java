@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.taskora.backend.project.dto.CreateProjectRequest;
 import com.taskora.backend.project.dto.ProjectResponse;
 import com.taskora.backend.project.dto.UpdateProjectRequest;
+import com.taskora.backend.task.TaskService;
+import com.taskora.backend.task.dto.TaskResponse;
 import com.taskora.backend.user.User;
 
 import jakarta.validation.Valid;
@@ -29,6 +31,7 @@ import lombok.RequiredArgsConstructor;
 public class ProjectController {
 
     private final ProjectService projectService;
+    private final TaskService taskService;
 
     @GetMapping
     public ResponseEntity<List<ProjectResponse>> listProjects(
@@ -62,6 +65,14 @@ public class ProjectController {
     ) {
         projectService.deleteProject(currentUser, id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/{id}/tasks")
+    public ResponseEntity<List<TaskResponse>> listTasks(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(taskService.listTasksForProject(currentUser, id));
     }
 
 }

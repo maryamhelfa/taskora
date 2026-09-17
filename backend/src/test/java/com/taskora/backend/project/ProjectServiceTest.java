@@ -18,6 +18,7 @@ import com.taskora.backend.project.dto.CreateProjectRequest;
 import com.taskora.backend.project.dto.ProjectResponse;
 import com.taskora.backend.project.dto.UpdateProjectRequest;
 import com.taskora.backend.team.Team;
+import com.taskora.backend.team.TeamAccessService;
 import com.taskora.backend.team.TeamMemberRepository;
 import com.taskora.backend.team.TeamRepository;
 import com.taskora.backend.user.User;
@@ -37,7 +38,7 @@ class ProjectServiceTest {
     private ProjectService projectService;
 
     private ProjectService newProjectService() {
-        return new ProjectService(projectRepository, teamRepository, teamMemberRepository);
+        return new ProjectService(projectRepository, teamRepository, teamMemberRepository, new TeamAccessService(teamMemberRepository));
     }
 
     private User user(long id) {

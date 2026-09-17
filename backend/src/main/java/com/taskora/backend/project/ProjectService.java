@@ -5,12 +5,12 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import com.taskora.backend.exception.ForbiddenActionException;
 import com.taskora.backend.exception.ResourceNotFoundException;
 import com.taskora.backend.project.dto.CreateProjectRequest;
 import com.taskora.backend.project.dto.ProjectResponse;
 import com.taskora.backend.project.dto.UpdateProjectRequest;
 import com.taskora.backend.team.Team;
+import com.taskora.backend.team.TeamAccessService;
 import com.taskora.backend.team.TeamMemberRepository;
 import com.taskora.backend.team.TeamRepository;
 import com.taskora.backend.user.User;
@@ -25,12 +25,13 @@ public class ProjectService {
     private final ProjectRepository projectRepository;
     private final TeamRepository teamRepository;
     private final TeamMemberRepository teamMemberRepository;
+    private final TeamAccessService teamAccessService;
 
     @Transactional(readOnly = true)
     public List<ProjectResponse> listProjects(User currentUser, Long teamId) {
         List<Project> projects;
         if (teamId != null) {
-            requireMembership(teamId, currentUser.getId());
+            teamAccessService.requireMembership(teamId, currentUser.getId());
             projects = projectRepository.findAllByTeamId(teamId);
         } else {
             List<Long> teamIds = teamMemberRepository.findAllByUserId(currentUser.getId()).stream()
@@ -42,7 +43,7 @@ public class ProjectService {
     }
 
     public ProjectResponse createProject(User currentUser, CreateProjectRequest request) {
-        requireMembership(request.teamId(), currentUser.getId());
+        teamAccessService.requireMembership(request.teamId(), currentUser.getId());
         Team team = teamRepository.getReferenceById(request.teamId());
 
         Project project = Project.builder()
@@ -58,7 +59,7 @@ public class ProjectService {
 
     public ProjectResponse updateProject(User currentUser, Long projectId, UpdateProjectRequest request) {
         Project project = findProjectOrThrow(projectId);
-        requireMembership(project.getTeam().getId(), currentUser.getId());
+        teamAccessService.requireMembership(project.getTeam().getId(), currentUser.getId());
 
         project.setName(request.name());
         project.setDescription(request.description());
@@ -69,19 +70,13 @@ public class ProjectService {
 
     public void deleteProject(User currentUser, Long projectId) {
         Project project = findProjectOrThrow(projectId);
-        requireMembership(project.getTeam().getId(), currentUser.getId());
+        teamAccessService.requireMembership(project.getTeam().getId(), currentUser.getId());
         projectRepository.delete(project);
     }
 
     private Project findProjectOrThrow(Long projectId) {
         return projectRepository.findById(projectId)
                 .orElseThrow(() -> new ResourceNotFoundException("Projet introuvable : " + projectId));
-    }
-
-    private void requireMembership(Long teamId, Long userId) {
-        if (!teamMemberRepository.existsByTeamIdAndUserId(teamId, userId)) {
-            throw new ForbiddenActionException("Vous n'etes pas membre de cette equipe");
-        }
     }
 
     private ProjectResponse toProjectResponse(Project project) {
