@@ -1,0 +1,39 @@
+# --- Java / Maven (backend) ---
+target/
+!.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+!.mvn/wrapper/*.jar
+.mvn/timing.properties
+hs_err_pid*
+replay_pid*
+
+# --- Node / Angular (frontend) ---
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-error.log*
+*.tsbuildinfo
+
+# --- Environnement / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- IDE / éditeurs ---
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+.classpath
+.project
+.settings/
+
+# --- Système ---
+.DS_Store
+Thumbs.db
+*.log
