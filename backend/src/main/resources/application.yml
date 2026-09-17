@@ -25,7 +25,9 @@ server:
 
 app:
   jwt:
-    secret: ${JWT_SECRET:change-me-in-env}
+    # HS256 exige au moins 256 bits (32 caracteres) : ce defaut est utilisable en dev,
+    # mais DOIT etre remplace par un secret aleatoire long via la variable d'env en prod.
+    secret: ${JWT_SECRET:dev-only-secret-change-me-please-32-chars-minimum}
     expiration-ms: ${JWT_EXPIRATION_MS:86400000}
   ai:
     anthropic-api-key: ${ANTHROPIC_API_KEY:}
