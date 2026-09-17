@@ -3,7 +3,7 @@ spring:
     name: taskora-backend
 
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:taskora}
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5433}/${DB_NAME:taskora}
     username: ${DB_USER:taskora}
     password: ${DB_PASSWORD:taskora}
 
