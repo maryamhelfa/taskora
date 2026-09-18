@@ -17,6 +17,8 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.taskora.backend.activity.ActivityLogService;
 import com.taskora.backend.activity.dto.ActivityLogResponse;
+import com.taskora.backend.ai.AiSummaryService;
+import com.taskora.backend.ai.dto.AiSummaryResponse;
 import com.taskora.backend.project.dto.CreateProjectRequest;
 import com.taskora.backend.project.dto.ProjectResponse;
 import com.taskora.backend.project.dto.UpdateProjectRequest;
@@ -35,6 +37,7 @@ public class ProjectController {
     private final ProjectService projectService;
     private final TaskService taskService;
     private final ActivityLogService activityLogService;
+    private final AiSummaryService aiSummaryService;
 
     @GetMapping
     public ResponseEntity<List<ProjectResponse>> listProjects(
@@ -84,6 +87,14 @@ public class ProjectController {
             @PathVariable Long id
     ) {
         return ResponseEntity.ok(activityLogService.listForProject(currentUser, id));
+    }
+
+    @PostMapping("/{id}/ai-summary")
+    public ResponseEntity<AiSummaryResponse> generateAiSummary(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable Long id
+    ) {
+        return ResponseEntity.ok(aiSummaryService.generateSummary(currentUser, id));
     }
 
 }
