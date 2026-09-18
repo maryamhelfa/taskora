@@ -1,0 +1,156 @@
+<div class="teams-page">
+  <app-top-nav />
+
+  <div class="page-content">
+    <div class="teams-layout">
+      <section class="panel teams-panel">
+        <div class="panel-header">
+          <h2>Mes equipes</h2>
+        </div>
+
+        @if (teamsError()) {
+          <div class="form-error">{{ teamsError() }}</div>
+        }
+
+        @if (loadingTeams()) {
+          <p class="empty-state">Chargement...</p>
+        } @else if (teams().length === 0) {
+          <p class="empty-state">Aucune equipe pour l'instant.</p>
+        } @else {
+          <ul class="item-list">
+            @for (team of teams(); track team.id) {
+              <li>
+                <button
+                  type="button"
+                  class="item-row selectable"
+                  [class.selected]="team.id === selectedTeamId()"
+                  (click)="selectTeam(team.id)"
+                >
+                  <span class="item-main">
+                    <span class="item-title">{{ team.name }}</span>
+                  </span>
+                </button>
+              </li>
+            }
+          </ul>
+        }
+
+        <form [formGroup]="teamForm" (ngSubmit)="submitTeamForm()" class="inline-form" novalidate>
+          <input type="text" formControlName="name" placeholder="Nom de la nouvelle equipe" />
+          <button type="submit" class="btn-secondary" [disabled]="creatingTeam()">
+            {{ creatingTeam() ? 'Creation...' : '+ Creer une equipe' }}
+          </button>
+        </form>
+      </section>
+
+      @if (selectedTeamId() !== null) {
+        <div class="team-details">
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Membres</h2>
+            </div>
+
+            @if (membersError()) {
+              <div class="form-error">{{ membersError() }}</div>
+            }
+
+            @if (loadingMembers()) {
+              <p class="empty-state">Chargement...</p>
+            } @else if (members().length === 0) {
+              <p class="empty-state">Aucun membre.</p>
+            } @else {
+              <ul class="item-list">
+                @for (member of members(); track member.id) {
+                  <li class="item-row">
+                    <span class="item-main">
+                      <span class="item-title">{{ member.firstName }} {{ member.lastName }}</span>
+                      <span class="item-meta">{{ member.email }}</span>
+                    </span>
+                    <span class="badge" [class.badge-primary]="member.role === 'ADMIN'">{{ member.role }}</span>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (memberError()) {
+              <div class="form-error">{{ memberError() }}</div>
+            }
+
+            <form [formGroup]="memberForm" (ngSubmit)="submitMemberForm()" class="inline-form" novalidate>
+              <input type="email" formControlName="email" placeholder="Email du membre" />
+              <select formControlName="role">
+                <option value="MEMBER">MEMBER</option>
+                <option value="ADMIN">ADMIN</option>
+              </select>
+              <button type="submit" class="btn-secondary" [disabled]="addingMember()">
+                {{ addingMember() ? 'Ajout...' : '+ Ajouter un membre' }}
+              </button>
+            </form>
+          </section>
+
+          <section class="panel">
+            <div class="panel-header">
+              <h2>Projets</h2>
+              @if (editingProjectId() === null) {
+                <button type="button" class="btn-secondary" (click)="startCreateProject()">+ Nouveau projet</button>
+              }
+            </div>
+
+            @if (projectsError()) {
+              <div class="form-error">{{ projectsError() }}</div>
+            }
+
+            @if (loadingProjects()) {
+              <p class="empty-state">Chargement...</p>
+            } @else if (projects().length === 0) {
+              <p class="empty-state">Aucun projet dans cette equipe.</p>
+            } @else {
+              <ul class="item-list">
+                @for (project of projects(); track project.id) {
+                  <li class="item-row">
+                    <span class="item-main">
+                      <span class="item-title">{{ project.name }}</span>
+                      @if (project.description) {
+                        <span class="item-meta">{{ project.description }}</span>
+                      }
+                    </span>
+                    <span class="item-actions">
+                      <span class="badge" [class.badge-primary]="project.status === 'ACTIVE'">{{ project.status }}</span>
+                      <button type="button" class="btn-link" (click)="startEditProject(project)">Modifier</button>
+                      <button type="button" class="btn-secondary" (click)="toggleArchive(project)">
+                        {{ project.status === 'ACTIVE' ? 'Archiver' : 'Reactiver' }}
+                      </button>
+                      <button type="button" class="btn-danger" (click)="deleteProject(project)">Supprimer</button>
+                    </span>
+                  </li>
+                }
+              </ul>
+            }
+
+            @if (editingProjectId() !== null) {
+              <form [formGroup]="projectForm" (ngSubmit)="submitProjectForm()" class="project-form" novalidate>
+                @if (projectError()) {
+                  <div class="form-error">{{ projectError() }}</div>
+                }
+                <div class="form-field">
+                  <label for="projectName">Nom du projet</label>
+                  <input id="projectName" type="text" formControlName="name" />
+                </div>
+                <div class="form-field">
+                  <label for="projectDescription">Description</label>
+                  <textarea id="projectDescription" formControlName="description" rows="2"></textarea>
+                </div>
+                <div class="item-actions">
+                  <button type="submit" class="btn-secondary" [disabled]="savingProject()">
+                    {{ savingProject() ? 'Enregistrement...' : 'Enregistrer' }}
+                  </button>
+                  <button type="button" class="btn-link" (click)="cancelEditProject()">Annuler</button>
+                </div>
+              </form>
+            }
+          </section>
+        </div>
+      }
+    </div>
+  </div>
+</div>

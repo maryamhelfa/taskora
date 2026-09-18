@@ -17,5 +17,10 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/dashboard/dashboard').then((m) => m.Dashboard),
   },
+  {
+    path: 'teams',
+    canActivate: [authGuard],
+    loadComponent: () => import('./features/teams/teams').then((m) => m.Teams),
+  },
   { path: '**', redirectTo: 'login' },
 ];

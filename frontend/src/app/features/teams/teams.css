@@ -1,0 +1,31 @@
+.teams-page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.teams-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+
+.team-details {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  min-width: 0;
+}
+
+.project-form {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 720px) {
+  .teams-layout {
+    grid-template-columns: 1fr;
+  }
+}

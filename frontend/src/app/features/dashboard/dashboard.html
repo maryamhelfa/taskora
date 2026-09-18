@@ -1,8 +1,5 @@
 <div class="dashboard-page">
-  <header class="dashboard-header">
-    <span>Taskora</span>
-    <button type="button" class="link-button" (click)="logout()">Se deconnecter</button>
-  </header>
+  <app-top-nav />
 
   <main class="dashboard-content">
     <h1>Bienvenue {{ currentUser()?.firstName }}</h1>
