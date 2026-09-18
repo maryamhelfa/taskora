@@ -50,6 +50,19 @@ public class TeamService {
         return toTeamResponse(team);
     }
 
+    @Transactional(readOnly = true)
+    public List<TeamMemberResponse> listMembers(User currentUser, Long teamId) {
+        if (!teamRepository.existsById(teamId)) {
+            throw new ResourceNotFoundException("Equipe introuvable : " + teamId);
+        }
+        if (!teamMemberRepository.existsByTeamIdAndUserId(teamId, currentUser.getId())) {
+            throw new ForbiddenActionException("Vous n'etes pas membre de cette equipe");
+        }
+        return teamMemberRepository.findAllByTeamId(teamId).stream()
+                .map(this::toTeamMemberResponse)
+                .toList();
+    }
+
     public TeamMemberResponse addMember(User currentUser, Long teamId, AddTeamMemberRequest request) {
         Team team = teamRepository.findById(teamId)
                 .orElseThrow(() -> new ResourceNotFoundException("Equipe introuvable : " + teamId));

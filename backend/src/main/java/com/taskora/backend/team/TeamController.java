@@ -41,6 +41,14 @@ public class TeamController {
         return ResponseEntity.status(HttpStatus.CREATED).body(teamService.createTeam(currentUser, request));
     }
 
+    @GetMapping("/{id}/members")
+    public ResponseEntity<List<TeamMemberResponse>> listMembers(
+            @AuthenticationPrincipal User currentUser,
+            @PathVariable("id") Long teamId
+    ) {
+        return ResponseEntity.ok(teamService.listMembers(currentUser, teamId));
+    }
+
     @PostMapping("/{id}/members")
     public ResponseEntity<TeamMemberResponse> addMember(
             @AuthenticationPrincipal User currentUser,

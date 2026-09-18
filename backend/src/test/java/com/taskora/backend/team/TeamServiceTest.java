@@ -123,6 +123,47 @@ class TeamServiceTest {
     }
 
     @Test
+    void listMembers_shouldReturnMembers_whenRequesterIsMember() {
+        teamService = newTeamService();
+        User admin = user(1L, "admin@doe.com");
+        Team team = Team.builder().id(10L).name("Squad Alpha").owner(admin).build();
+        TeamMember adminMembership = TeamMember.builder().id(100L).team(team).user(admin).role(TeamRole.ADMIN).build();
+
+        when(teamRepository.existsById(10L)).thenReturn(true);
+        when(teamMemberRepository.existsByTeamIdAndUserId(10L, 1L)).thenReturn(true);
+        when(teamMemberRepository.findAllByTeamId(10L)).thenReturn(List.of(adminMembership));
+
+        List<TeamMemberResponse> response = teamService.listMembers(admin, 10L);
+
+        assertThat(response).hasSize(1);
+        assertThat(response.get(0).email()).isEqualTo("admin@doe.com");
+        assertThat(response.get(0).role()).isEqualTo(TeamRole.ADMIN);
+    }
+
+    @Test
+    void listMembers_shouldThrowForbidden_whenRequesterIsNotMember() {
+        teamService = newTeamService();
+        User outsider = user(1L, "outsider@doe.com");
+
+        when(teamRepository.existsById(10L)).thenReturn(true);
+        when(teamMemberRepository.existsByTeamIdAndUserId(10L, 1L)).thenReturn(false);
+
+        assertThatThrownBy(() -> teamService.listMembers(outsider, 10L))
+                .isInstanceOf(ForbiddenActionException.class);
+    }
+
+    @Test
+    void listMembers_shouldThrowNotFound_whenTeamDoesNotExist() {
+        teamService = newTeamService();
+        User user = user(1L, "user@doe.com");
+
+        when(teamRepository.existsById(99L)).thenReturn(false);
+
+        assertThatThrownBy(() -> teamService.listMembers(user, 99L))
+                .isInstanceOf(ResourceNotFoundException.class);
+    }
+
+    @Test
     void listTeamsForUser_shouldReturnTeamsFromRepository() {
         teamService = newTeamService();
         User owner = user(1L, "owner@doe.com");
