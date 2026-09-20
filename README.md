@@ -45,12 +45,12 @@ docker compose up --build
 Cela démarre trois services :
 
 - `db` : PostgreSQL, exposé sur `localhost:5433`
-- `backend` : API Spring Boot, exposée sur `localhost:8081`
+- `backend` : API Spring Boot, exposée sur `localhost:8085`
 - `frontend` : Angular buildé et servi par Nginx, exposé sur `localhost:4200`, qui proxy `/api` vers le service `backend`
 
 Une fois les conteneurs démarrés, ouvrir **http://localhost:4200**.
 
-Les ports hôte (`5433`, `8081`, `4200`) sont fixés directement dans `docker-compose.yml` (partie gauche du `"HOTE:CONTENEUR"`) ; si l'un d'eux est déjà utilisé sur votre machine, modifiez-le directement dans ce fichier.
+Les ports hôte (`5433`, `8085`, `4200`) sont fixés directement dans `docker-compose.yml` (partie gauche du `"HOTE:CONTENEUR"`) ; si l'un d'eux est déjà utilisé sur votre machine, modifiez-le directement dans ce fichier.
 
 Pour arrêter :
 
