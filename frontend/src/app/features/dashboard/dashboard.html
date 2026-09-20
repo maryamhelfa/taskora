@@ -1,8 +1,68 @@
 <div class="dashboard-page">
   <app-top-nav />
 
-  <main class="dashboard-content">
+  <div class="page-content">
     <h1>Bienvenue {{ currentUser()?.firstName }}</h1>
-    <p>Le tableau de bord arrive bientot.</p>
-  </main>
+
+    @if (loading()) {
+      <p class="empty-state">Chargement du tableau de bord...</p>
+    } @else if (error()) {
+      <div class="form-error">{{ error() }}</div>
+    } @else if (dashboard(); as data) {
+      <div class="stat-tiles">
+        <div class="stat-tile">
+          <span class="stat-value">{{ data.projects.length }}</span>
+          <span class="stat-label">Projets</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{{ totalTodo() }}</span>
+          <span class="stat-label">A faire</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{{ totalInProgress() }}</span>
+          <span class="stat-label">En cours</span>
+        </div>
+        <div class="stat-tile">
+          <span class="stat-value">{{ totalDone() }}</span>
+          <span class="stat-label">Termine</span>
+        </div>
+        <div class="stat-tile" [class.stat-tile-alert]="data.totalOverdueTasks > 0">
+          <span class="stat-value">{{ data.totalOverdueTasks }}</span>
+          <span class="stat-label">En retard</span>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-header">
+          <h2>Projets</h2>
+        </div>
+
+        @if (data.projects.length === 0) {
+          <p class="empty-state">Aucun projet pour l'instant. Cree une equipe et un projet pour commencer.</p>
+        } @else {
+          <ul class="item-list">
+            @for (project of data.projects; track project.projectId) {
+              <li class="item-row project-dashboard-row">
+                <span class="item-main">
+                  <span class="item-title">{{ project.projectName }}</span>
+                  <span class="badge" [class.badge-primary]="project.status === 'ACTIVE'">{{ project.status }}</span>
+                </span>
+
+                <div class="project-dashboard-counts">
+                  <span class="badge">A faire : {{ project.todoCount }}</span>
+                  <span class="badge">En cours : {{ project.inProgressCount }}</span>
+                  <span class="badge">Termine : {{ project.doneCount }}</span>
+                  @if (project.overdueCount > 0) {
+                    <span class="badge badge-alert">{{ project.overdueCount }} en retard</span>
+                  }
+                </div>
+
+                <a class="btn-link" [routerLink]="['/projects', project.projectId]">Ouvrir</a>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  </div>
 </div>

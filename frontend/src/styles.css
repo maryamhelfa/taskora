@@ -246,6 +246,12 @@ a {
   border-color: var(--color-primary);
 }
 
+.badge.badge-alert {
+  color: var(--color-error);
+  border-color: var(--color-error);
+  background: var(--color-error-bg);
+}
+
 .inline-form {
   display: flex;
   flex-wrap: wrap;
