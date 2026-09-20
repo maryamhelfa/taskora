@@ -17,6 +17,7 @@ import { ProjectService } from '../../../core/services/project.service';
 import { TaskService } from '../../../core/services/task.service';
 import { TeamService } from '../../../core/services/team.service';
 import { TopNav } from '../../../shared/top-nav/top-nav';
+import { TaskDetailModal } from '../task-detail-modal/task-detail-modal';
 
 const COLUMN_STATUS: Record<string, TaskStatus> = {
   'column-todo': 'TODO',
@@ -32,7 +33,7 @@ const PRIORITY_LABELS: Record<TaskPriority, string> = {
 
 @Component({
   selector: 'app-project-detail',
-  imports: [ReactiveFormsModule, DragDropModule, DatePipe, TopNav],
+  imports: [ReactiveFormsModule, DragDropModule, DatePipe, TopNav, TaskDetailModal],
   templateUrl: './project-detail.html',
   styleUrl: './project-detail.css',
 })
@@ -57,6 +58,8 @@ export class ProjectDetail implements OnInit {
   readonly loadingTasks = signal(false);
   readonly tasksError = signal<string | null>(null);
   readonly boardError = signal<string | null>(null);
+
+  readonly selectedTask = signal<Task | null>(null);
 
   readonly showTaskForm = signal(false);
   readonly creatingTask = signal(false);
@@ -167,6 +170,14 @@ export class ProjectDetail implements OnInit {
         this.boardError.set(error.error?.message ?? 'Impossible de deplacer la tache.');
       },
     });
+  }
+
+  openTask(task: Task): void {
+    this.selectedTask.set(task);
+  }
+
+  closeTask(): void {
+    this.selectedTask.set(null);
   }
 
   toggleTaskForm(): void {

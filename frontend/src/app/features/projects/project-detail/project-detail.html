@@ -90,7 +90,7 @@
               (cdkDropListDropped)="drop($event)"
             >
               @for (task of todoTasks(); track task.id) {
-                <div class="kanban-card" cdkDrag>
+                <div class="kanban-card" cdkDrag (click)="openTask(task)">
                   <span class="kanban-card-title">{{ task.title }}</span>
                   <div class="kanban-card-meta">
                     <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
@@ -116,7 +116,7 @@
               (cdkDropListDropped)="drop($event)"
             >
               @for (task of inProgressTasks(); track task.id) {
-                <div class="kanban-card" cdkDrag>
+                <div class="kanban-card" cdkDrag (click)="openTask(task)">
                   <span class="kanban-card-title">{{ task.title }}</span>
                   <div class="kanban-card-meta">
                     <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
@@ -142,7 +142,7 @@
               (cdkDropListDropped)="drop($event)"
             >
               @for (task of doneTasks(); track task.id) {
-                <div class="kanban-card" cdkDrag>
+                <div class="kanban-card" cdkDrag (click)="openTask(task)">
                   <span class="kanban-card-title">{{ task.title }}</span>
                   <div class="kanban-card-meta">
                     <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
@@ -161,4 +161,8 @@
       }
     }
   </div>
+
+  @if (selectedTask(); as task) {
+    <app-task-detail-modal [task]="task" (closed)="closeTask()" />
+  }
 </div>

@@ -1,0 +1,89 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-panel" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h2>{{ task().title }}</h2>
+      <button type="button" class="btn-link" (click)="close()">Fermer</button>
+    </div>
+
+    <div class="modal-meta">
+      <span class="badge priority-{{ task().priority.toLowerCase() }}">{{ priorityLabel(task().priority) }}</span>
+      @if (task().dueDate) {
+        <span class="item-meta">Echeance : {{ task().dueDate | date: 'dd/MM/yyyy' }}</span>
+      }
+      <span class="item-meta">Assigne : {{ assigneeName() }}</span>
+    </div>
+
+    <p class="task-description">{{ task().description || 'Aucune description.' }}</p>
+
+    <section class="modal-section">
+      <h3>Sous-taches</h3>
+
+      @if (subtasksError()) {
+        <div class="form-error">{{ subtasksError() }}</div>
+      }
+
+      <ul class="item-list">
+        @for (subtask of subtasks(); track subtask.id) {
+          <li class="item-row subtask-row">
+            <label class="subtask-label">
+              <input type="checkbox" [checked]="subtask.done" (change)="toggleSubtask(subtask)" />
+              <span [class.done]="subtask.done">{{ subtask.title }}</span>
+            </label>
+          </li>
+        }
+        @if (subtasks().length === 0) {
+          <p class="empty-state">Aucune sous-tache.</p>
+        }
+      </ul>
+
+      <form class="inline-form" (ngSubmit)="addSubtask()">
+        <input
+          type="text"
+          placeholder="Nouvelle sous-tache"
+          [ngModel]="newSubtaskTitle()"
+          (ngModelChange)="newSubtaskTitle.set($event)"
+          name="newSubtaskTitle"
+        />
+        <button type="submit" class="btn-secondary" [disabled]="addingSubtask() || !newSubtaskTitle().trim()">
+          {{ addingSubtask() ? 'Ajout...' : 'Ajouter' }}
+        </button>
+      </form>
+    </section>
+
+    <section class="modal-section">
+      <h3>Commentaires</h3>
+
+      @if (commentsError()) {
+        <div class="form-error">{{ commentsError() }}</div>
+      }
+
+      <ul class="item-list">
+        @for (comment of comments(); track comment.id) {
+          <li class="item-row comment-row">
+            <div class="item-main">
+              <span class="item-title">{{ comment.authorFirstName }} {{ comment.authorLastName }}</span>
+              <span class="item-meta">{{ comment.createdAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+              <p class="comment-content">{{ comment.content }}</p>
+            </div>
+          </li>
+        }
+        @if (comments().length === 0) {
+          <p class="empty-state">Aucun commentaire.</p>
+        }
+      </ul>
+
+      <form class="inline-form" (ngSubmit)="addComment()">
+        <textarea
+          placeholder="Ajouter un commentaire"
+          [ngModel]="newComment()"
+          (ngModelChange)="newComment.set($event)"
+          name="newComment"
+          rows="2"
+        ></textarea>
+        <button type="submit" class="btn-secondary" [disabled]="addingComment() || !newComment().trim()">
+          {{ addingComment() ? 'Envoi...' : 'Commenter' }}
+        </button>
+      </form>
+    </section>
+  </div>
+</div>
