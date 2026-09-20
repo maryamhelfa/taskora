@@ -2,7 +2,7 @@
 
 Application de gestion de projets et de tâches (équipes, projets, tableau Kanban, sous-tâches, commentaires, tableau de bord, résumé IA de l'avancement). Stack : Angular 20 (frontend), Spring Boot 3 / Java 21 (backend), PostgreSQL, JWT, Docker Compose.
 
-Ce document couvre uniquement l'installation et le lancement. Le détail des fonctionnalités et des choix techniques se trouve dans `taskora-specification.md`.
+Ce document couvre l'installation, le lancement, l'architecture et les choix techniques. Le détail fonctionnel complet (cahier des charges) se trouve dans `taskora-specification.md`.
 
 ## Prérequis
 
@@ -117,3 +117,62 @@ mvn test
 ```
 
 Nécessite une base PostgreSQL accessible (voir étape 1 ci-dessus) pour les tests d'intégration.
+
+## Architecture
+
+### Vue d'ensemble
+
+Une API REST (backend) consommée par une SPA (frontend), toutes deux stateless côté serveur : l'état de session vit uniquement dans le token JWT porté par le client. Communication en JSON sous `/api`, une seule base PostgreSQL partagée.
+
+```
+Angular (SPA, port 4200)  --HTTP/JSON-->  Spring Boot (API REST, port 8080)  --JDBC-->  PostgreSQL
+        |                                          |
+   JWT en localStorage                    JwtAuthenticationFilter (stateless)
+```
+
+### Backend (Spring Boot)
+
+Organisation **par domaine métier** (package par fonctionnalité) plutôt que par couche technique : `auth`, `user`, `team`, `project`, `task` (tasks + subtasks + comments), `activity`, `dashboard`, `ai`, `security`, `exception`. Chaque domaine suit le même schéma interne : `Controller` (mapping HTTP) → `Service` (logique métier, transactions) → `Repository` (Spring Data JPA), avec des DTO (records Java) en entrée/sortie — les entités JPA ne sont jamais exposées directement dans les réponses HTTP.
+
+Points structurants :
+
+- **Autorisation par appartenance d'équipe** plutôt que par rôles Spring Security globaux : un utilisateur peut être `ADMIN` d'une équipe et simple `MEMBER` d'une autre, donc les droits ne peuvent pas être portés par un rôle unique sur le principal. `TeamAccessService.requireMembership(...)` centralise cette vérification et est réutilisé par tous les autres services (projets, tâches, sous-tâches, commentaires, journal d'activité, résumé IA, tableau de bord) pour éviter de la dupliquer.
+- **Sécurité JWT stateless** : `JwtService` signe/valide les tokens (HS256), `JwtAuthenticationFilter` lit l'en-tête `Authorization` sur chaque requête, `SecurityConfig` force `SessionCreationPolicy.STATELESS` (aucune session serveur). Mots de passe hashés en BCrypt.
+- **Journal d'activité** alimenté explicitement : `ActivityLogService.log(...)` est appelé depuis les services métier (projet créé/modifié, tâche créée/modifiée/déplacée/supprimée, commentaire ajouté) plutôt que via des événements Spring ou de l'AOP — plus direct à suivre pour la taille du projet.
+- **Sous-tâches et commentaires sans endpoint de listage dédié** : ils sont embarqués directement dans `TaskResponse`, pour afficher le détail complet d'une tâche en un seul aller-retour réseau.
+- **Erreurs centralisées** : `GlobalExceptionHandler` (`@RestControllerAdvice`) traduit chaque exception métier (`ResourceNotFoundException`, `ForbiddenActionException`, `ConflictException`, `AiServiceException`, etc.) en code HTTP et message JSON cohérents.
+- **Intégration IA** : `AiSummaryService` utilise le SDK officiel `com.anthropic:anthropic-java` (pas d'appel HTTP fait main), construit un prompt à partir de l'état réel des tâches du projet, et mappe chaque famille d'erreur du SDK (quota, timeout, erreur serveur) vers une réponse HTTP 503 avec un message explicite.
+- **Schéma de base versionné par Flyway** (`V1__init_schema.sql`, pas de `ddl-auto: update`) : 8 tables — `users`, `teams`, `team_members`, `projects`, `tasks`, `subtasks`, `comments`, `activity_logs` — avec contraintes `CHECK` pour les enums et `ON DELETE CASCADE`/`SET NULL` selon la sémantique métier de chaque relation.
+
+### Frontend (Angular)
+
+Standalone components uniquement (pas de `NgModule`), organisés en trois dossiers :
+
+- `core/` : un service HTTP par ressource (`auth`, `team`, `project`, `task`, `activity`, `dashboard`), les modèles TypeScript alignés sur les DTO backend, un guard de route (`authGuard`) et un intercepteur HTTP (`authInterceptor`) qui ajoute le token JWT à chaque requête sortante.
+- `features/` : une page par route (`auth/login`, `auth/register`, `dashboard`, `teams`, `projects/project-detail` + sa modale `task-detail-modal`), chargées en lazy-loading via `loadComponent`.
+- `shared/` : composants réutilisés entre pages (`TopNav`).
+
+Autres choix notables :
+
+- **Gestion d'état via les signals natifs Angular** (`signal`/`computed`/`effect`) directement dans chaque composant — pas de librairie de state management (NgRx, Akita...), le périmètre de l'application (formulaires + listes chargées par page) ne le justifie pas.
+- **Kanban** : `@angular/cdk/drag-drop` pour le glisser-déposer entre colonnes, avec mise à jour optimiste de l'affichage et retour en arrière automatique si l'appel `PATCH /tasks/{id}/status` échoue côté serveur.
+- **Authentification côté client** : token JWT + informations utilisateur en `localStorage` (`AuthService`) ; pas de refresh token, la session expire avec le token (`JWT_EXPIRATION_MS`).
+- **Un seul jeu de styles CSS partagés** (`styles.css`, variables CSS pour couleurs/rayons) plutôt qu'un framework UI complet — cohérent avec un projet de démonstration où la vitesse d'itération prime sur un design system élaboré.
+
+### Déploiement
+
+Docker Compose à 3 services (`db` / `backend` / `frontend`). Le frontend est buildé en production et servi par Nginx, qui proxy `/api` vers le service `backend` : un seul point d'entrée HTTP côté client et pas de CORS à gérer en production (le CORS n'est nécessaire qu'en développement local, où Angular et Spring tournent sur des ports différents).
+
+## Choix techniques
+
+| Choix | Pourquoi |
+|---|---|
+| Angular 20 (standalone + signals) | Dernière version stable au démarrage du projet ; les signals réduisent le boilerplate RxJS pour de l'état local simple, sans dépendance supplémentaire. |
+| Spring Boot 3 / Java 21 | Écosystème mature et productif (Spring Data JPA, Spring Security, Flyway) pour une API REST classique. |
+| PostgreSQL | SGBD relationnel robuste, adapté au modèle très relationnel du domaine (équipes → projets → tâches → sous-tâches/commentaires). |
+| JWT stateless plutôt que sessions | Pas de store de session à partager entre instances ; adapté à une SPA qui consomme une API REST sans état serveur. |
+| Autorisation par appartenance d'équipe (pas de rôles Spring Security globaux) | Reflète le vrai modèle métier : un rôle est toujours relatif à une équipe (`TeamRole`), jamais global à l'utilisateur. |
+| SDK officiel `anthropic-java` plutôt qu'appel HTTP manuel | Moins de code à maintenir ; erreurs (quota, timeout, 5xx) déjà typées par le SDK plutôt qu'à re-parser depuis des réponses HTTP brutes. |
+| Modèle `claude-haiku-4-5` par défaut (configurable via `ANTHROPIC_MODEL`) | Le résumé de projet est une tâche courte et peu exigeante ; un modèle plus gros n'apporterait pas de valeur proportionnelle au coût pour ce cas d'usage. |
+| Docker Compose plutôt qu'un orchestrateur (Kubernetes...) | Trois services suffisent pour une démo et un déploiement simple ; un orchestrateur plus lourd serait disproportionné. |
+| Tests unitaires Mockito ciblés (pas d'intégration MockMvc/Testcontainers systématique) | Couvre l'exigence minimale de la spec (authentification, création/modification de tâche, appel IA mocké) sans alourdir la CI ; `BackendApplicationTests` reste le seul test d'intégration (chargement du contexte + migration Flyway réelle) pour valider que tout se câble correctement. |
