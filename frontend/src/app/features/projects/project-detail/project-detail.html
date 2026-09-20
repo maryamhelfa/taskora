@@ -14,10 +14,29 @@
             <p>{{ p.description }}</p>
           }
         </div>
-        <button type="button" class="btn-secondary" (click)="toggleTaskForm()">
-          {{ showTaskForm() ? 'Annuler' : '+ Nouvelle tache' }}
-        </button>
+        <div class="header-actions">
+          <button type="button" class="btn-secondary" (click)="generateAiSummary()" [disabled]="generatingSummary()">
+            {{ generatingSummary() ? 'Generation...' : 'Resume IA' }}
+          </button>
+          <button type="button" class="btn-secondary" (click)="toggleTaskForm()">
+            {{ showTaskForm() ? 'Annuler' : '+ Nouvelle tache' }}
+          </button>
+        </div>
       </div>
+
+      @if (aiSummaryError()) {
+        <div class="form-error">{{ aiSummaryError() }}</div>
+      }
+
+      @if (aiSummary(); as summary) {
+        <div class="panel ai-summary-panel">
+          <div class="panel-header">
+            <h2>Resume IA</h2>
+            <span class="item-meta">{{ summary.generatedAt | date: 'dd/MM/yyyy HH:mm' }}</span>
+          </div>
+          <p class="ai-summary-text">{{ summary.summary }}</p>
+        </div>
+      }
 
       @if (showTaskForm()) {
         <form [formGroup]="taskForm" (ngSubmit)="submitTaskForm()" class="panel task-form" novalidate>
@@ -159,10 +178,40 @@
           </section>
         </div>
       }
+
+      <section class="panel activity-panel">
+        <div class="panel-header">
+          <h2>Journal d'activite</h2>
+          <button type="button" class="btn-link" (click)="loadActivity()">Actualiser</button>
+        </div>
+
+        @if (activityError()) {
+          <div class="form-error">{{ activityError() }}</div>
+        }
+
+        @if (loadingActivity()) {
+          <p class="empty-state">Chargement...</p>
+        } @else if (activity().length === 0) {
+          <p class="empty-state">Aucune activite pour l'instant.</p>
+        } @else {
+          <ul class="item-list">
+            @for (entry of activity(); track entry.id) {
+              <li class="item-row activity-row">
+                <span class="item-main">
+                  <span class="item-title">{{ entry.description }}</span>
+                  <span class="item-meta">
+                    {{ entry.userFirstName }} {{ entry.userLastName }} · {{ entry.createdAt | date: 'dd/MM/yyyy HH:mm' }}
+                  </span>
+                </span>
+              </li>
+            }
+          </ul>
+        }
+      </section>
     }
   </div>
 
   @if (selectedTask(); as task) {
-    <app-task-detail-modal [task]="task" (closed)="closeTask()" />
+    <app-task-detail-modal [task]="task" (closed)="closeTask()" (commentAdded)="loadActivity()" />
   }
 </div>

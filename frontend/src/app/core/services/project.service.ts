@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
 import { environment } from '../../../environments/environment';
-import { CreateProjectRequest, Project, UpdateProjectRequest } from '../models/project.model';
+import { AiSummaryResponse, CreateProjectRequest, Project, UpdateProjectRequest } from '../models/project.model';
 
 @Injectable({ providedIn: 'root' })
 export class ProjectService {
@@ -25,5 +25,9 @@ export class ProjectService {
 
   deleteProject(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
+  }
+
+  generateAiSummary(id: number): Observable<AiSummaryResponse> {
+    return this.http.post<AiSummaryResponse>(`${this.baseUrl}/${id}/ai-summary`, {});
   }
 }

@@ -20,3 +20,8 @@ export interface UpdateProjectRequest {
   description?: string | null;
   status: ProjectStatus;
 }
+
+export interface AiSummaryResponse {
+  summary: string;
+  generatedAt: string;
+}

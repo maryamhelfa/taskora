@@ -23,6 +23,7 @@ export class TaskDetailModal {
 
   readonly task = input.required<Task>();
   readonly closed = output<void>();
+  readonly commentAdded = output<void>();
 
   readonly subtasks = signal<Subtask[]>([]);
   readonly comments = signal<TaskComment[]>([]);
@@ -116,6 +117,7 @@ export class TaskDetailModal {
         this.addingComment.set(false);
         this.comments.update((current) => [...current, comment]);
         this.newComment.set('');
+        this.commentAdded.emit();
       },
       error: (error: HttpErrorResponse) => {
         this.addingComment.set(false);

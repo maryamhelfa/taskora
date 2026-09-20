@@ -10,9 +10,11 @@ import {
   transferArrayItem,
 } from '@angular/cdk/drag-drop';
 
-import { Project } from '../../../core/models/project.model';
+import { ActivityLogEntry } from '../../../core/models/activity.model';
+import { AiSummaryResponse, Project } from '../../../core/models/project.model';
 import { Task, TaskPriority, TaskStatus } from '../../../core/models/task.model';
 import { TeamMember } from '../../../core/models/team.model';
+import { ActivityService } from '../../../core/services/activity.service';
 import { ProjectService } from '../../../core/services/project.service';
 import { TaskService } from '../../../core/services/task.service';
 import { TeamService } from '../../../core/services/team.service';
@@ -43,6 +45,7 @@ export class ProjectDetail implements OnInit {
   private readonly projectService = inject(ProjectService);
   private readonly taskService = inject(TaskService);
   private readonly teamService = inject(TeamService);
+  private readonly activityService = inject(ActivityService);
 
   private readonly projectId = Number(this.route.snapshot.paramMap.get('id'));
 
@@ -61,6 +64,14 @@ export class ProjectDetail implements OnInit {
 
   readonly selectedTask = signal<Task | null>(null);
 
+  readonly activity = signal<ActivityLogEntry[]>([]);
+  readonly loadingActivity = signal(false);
+  readonly activityError = signal<string | null>(null);
+
+  readonly aiSummary = signal<AiSummaryResponse | null>(null);
+  readonly generatingSummary = signal(false);
+  readonly aiSummaryError = signal<string | null>(null);
+
   readonly showTaskForm = signal(false);
   readonly creatingTask = signal(false);
   readonly taskFormError = signal<string | null>(null);
@@ -74,6 +85,7 @@ export class ProjectDetail implements OnInit {
   ngOnInit(): void {
     this.loadProject();
     this.loadTasks();
+    this.loadActivity();
   }
 
   priorityLabel(priority: TaskPriority): string {
@@ -126,6 +138,38 @@ export class ProjectDetail implements OnInit {
     });
   }
 
+  loadActivity(): void {
+    this.loadingActivity.set(true);
+    this.activityError.set(null);
+
+    this.activityService.listForProject(this.projectId).subscribe({
+      next: (entries) => {
+        this.loadingActivity.set(false);
+        this.activity.set(entries);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.loadingActivity.set(false);
+        this.activityError.set(error.error?.message ?? "Impossible de charger le journal d'activite.");
+      },
+    });
+  }
+
+  generateAiSummary(): void {
+    this.generatingSummary.set(true);
+    this.aiSummaryError.set(null);
+
+    this.projectService.generateAiSummary(this.projectId).subscribe({
+      next: (summary) => {
+        this.generatingSummary.set(false);
+        this.aiSummary.set(summary);
+      },
+      error: (error: HttpErrorResponse) => {
+        this.generatingSummary.set(false);
+        this.aiSummaryError.set(error.error?.message ?? 'Impossible de generer le resume IA.');
+      },
+    });
+  }
+
   private columnFor(status: TaskStatus): WritableSignal<Task[]> {
     if (status === 'TODO') return this.todoTasks;
     if (status === 'IN_PROGRESS') return this.inProgressTasks;
@@ -157,6 +201,7 @@ export class ProjectDetail implements OnInit {
     this.boardError.set(null);
 
     this.taskService.updateStatus(task.id, newStatus).subscribe({
+      next: () => this.loadActivity(),
       error: (error: HttpErrorResponse) => {
         task.status = previousStatus;
         const revertCurrent = [...currentColumn()];
@@ -211,6 +256,7 @@ export class ProjectDetail implements OnInit {
           this.creatingTask.set(false);
           this.todoTasks.update((current) => [...current, task]);
           this.showTaskForm.set(false);
+          this.loadActivity();
         },
         error: (error: HttpErrorResponse) => {
           this.creatingTask.set(false);
