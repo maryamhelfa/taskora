@@ -22,5 +22,11 @@ export const routes: Routes = [
     canActivate: [authGuard],
     loadComponent: () => import('./features/teams/teams').then((m) => m.Teams),
   },
+  {
+    path: 'projects/:id',
+    canActivate: [authGuard],
+    loadComponent: () =>
+      import('./features/projects/project-detail/project-detail').then((m) => m.ProjectDetail),
+  },
   { path: '**', redirectTo: 'login' },
 ];

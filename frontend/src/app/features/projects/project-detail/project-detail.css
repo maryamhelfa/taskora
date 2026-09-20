@@ -1,0 +1,138 @@
+.project-page {
+  min-height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.project-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.task-form {
+  margin-bottom: 1.5rem;
+}
+
+.task-form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.task-form-row .form-field {
+  flex: 1 1 160px;
+}
+
+.task-form-row select {
+  font-family: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.kanban-column h2 {
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.column-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 0.05rem 0.5rem;
+}
+
+.kanban-drop-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-height: 120px;
+  padding: 0.5rem;
+  border-radius: var(--radius);
+  background: var(--color-bg);
+  border: 1px dashed var(--color-border);
+}
+
+.kanban-drop-list.cdk-drop-list-dragging {
+  border-color: var(--color-primary);
+}
+
+.kanban-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: 0 1px 3px rgba(20, 24, 40, 0.05);
+  cursor: grab;
+}
+
+.kanban-card-title {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.kanban-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.badge.priority-low {
+  color: #2e7d32;
+  border-color: #2e7d32;
+}
+
+.badge.priority-medium {
+  color: #b26a00;
+  border-color: #b26a00;
+}
+
+.badge.priority-high {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.cdk-drag-preview {
+  box-shadow: 0 4px 14px rgba(20, 24, 40, 0.18);
+}
+
+.cdk-drag-placeholder {
+  opacity: 0.35;
+}
+
+.cdk-drag-animating {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+.kanban-drop-list.cdk-drop-list-dragging .kanban-card:not(.cdk-drag-placeholder) {
+  transition: transform 200ms cubic-bezier(0, 0, 0.2, 1);
+}
+
+@media (max-width: 880px) {
+  .kanban-board {
+    grid-template-columns: 1fr;
+  }
+}

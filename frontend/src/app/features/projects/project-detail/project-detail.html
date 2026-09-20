@@ -1,0 +1,164 @@
+<div class="project-page">
+  <app-top-nav />
+
+  <div class="page-content">
+    @if (loadingProject()) {
+      <p class="empty-state">Chargement du projet...</p>
+    } @else if (projectError()) {
+      <div class="form-error">{{ projectError() }}</div>
+    } @else if (project(); as p) {
+      <div class="project-header">
+        <div>
+          <h1>{{ p.name }}</h1>
+          @if (p.description) {
+            <p>{{ p.description }}</p>
+          }
+        </div>
+        <button type="button" class="btn-secondary" (click)="toggleTaskForm()">
+          {{ showTaskForm() ? 'Annuler' : '+ Nouvelle tache' }}
+        </button>
+      </div>
+
+      @if (showTaskForm()) {
+        <form [formGroup]="taskForm" (ngSubmit)="submitTaskForm()" class="panel task-form" novalidate>
+          @if (taskFormError()) {
+            <div class="form-error">{{ taskFormError() }}</div>
+          }
+
+          <div class="form-field">
+            <label for="taskTitle">Titre</label>
+            <input
+              id="taskTitle"
+              type="text"
+              formControlName="title"
+              [class.invalid]="taskForm.controls.title.invalid && taskForm.controls.title.touched"
+            />
+            @if (taskForm.controls.title.invalid && taskForm.controls.title.touched) {
+              <span class="field-error">Le titre est obligatoire.</span>
+            }
+          </div>
+
+          <div class="task-form-row">
+            <div class="form-field">
+              <label for="taskPriority">Priorite</label>
+              <select id="taskPriority" formControlName="priority">
+                <option value="LOW">Basse</option>
+                <option value="MEDIUM">Moyenne</option>
+                <option value="HIGH">Haute</option>
+              </select>
+            </div>
+
+            <div class="form-field">
+              <label for="taskDueDate">Echeance</label>
+              <input id="taskDueDate" type="date" formControlName="dueDate" />
+            </div>
+
+            <div class="form-field">
+              <label for="taskAssignee">Assigne a</label>
+              <select id="taskAssignee" formControlName="assigneeId">
+                <option value="">Non assignee</option>
+                @for (member of members(); track member.id) {
+                  <option [value]="member.userId">{{ member.firstName }} {{ member.lastName }}</option>
+                }
+              </select>
+            </div>
+          </div>
+
+          <button type="submit" class="btn-secondary" [disabled]="creatingTask()">
+            {{ creatingTask() ? 'Creation...' : 'Creer la tache' }}
+          </button>
+        </form>
+      }
+
+      @if (boardError()) {
+        <div class="form-error">{{ boardError() }}</div>
+      }
+
+      @if (loadingTasks()) {
+        <p class="empty-state">Chargement des taches...</p>
+      } @else if (tasksError()) {
+        <div class="form-error">{{ tasksError() }}</div>
+      } @else {
+        <div class="kanban-board" cdkDropListGroup>
+          <section class="kanban-column">
+            <h2>A faire <span class="column-count">{{ todoTasks().length }}</span></h2>
+            <div
+              id="column-todo"
+              cdkDropList
+              [cdkDropListData]="todoTasks()"
+              class="kanban-drop-list"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @for (task of todoTasks(); track task.id) {
+                <div class="kanban-card" cdkDrag>
+                  <span class="kanban-card-title">{{ task.title }}</span>
+                  <div class="kanban-card-meta">
+                    <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
+                    @if (task.dueDate) {
+                      <span class="item-meta">{{ task.dueDate | date: 'dd/MM/yyyy' }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (todoTasks().length === 0) {
+                <p class="empty-state">Aucune tache.</p>
+              }
+            </div>
+          </section>
+
+          <section class="kanban-column">
+            <h2>En cours <span class="column-count">{{ inProgressTasks().length }}</span></h2>
+            <div
+              id="column-in-progress"
+              cdkDropList
+              [cdkDropListData]="inProgressTasks()"
+              class="kanban-drop-list"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @for (task of inProgressTasks(); track task.id) {
+                <div class="kanban-card" cdkDrag>
+                  <span class="kanban-card-title">{{ task.title }}</span>
+                  <div class="kanban-card-meta">
+                    <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
+                    @if (task.dueDate) {
+                      <span class="item-meta">{{ task.dueDate | date: 'dd/MM/yyyy' }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (inProgressTasks().length === 0) {
+                <p class="empty-state">Aucune tache.</p>
+              }
+            </div>
+          </section>
+
+          <section class="kanban-column">
+            <h2>Termine <span class="column-count">{{ doneTasks().length }}</span></h2>
+            <div
+              id="column-done"
+              cdkDropList
+              [cdkDropListData]="doneTasks()"
+              class="kanban-drop-list"
+              (cdkDropListDropped)="drop($event)"
+            >
+              @for (task of doneTasks(); track task.id) {
+                <div class="kanban-card" cdkDrag>
+                  <span class="kanban-card-title">{{ task.title }}</span>
+                  <div class="kanban-card-meta">
+                    <span class="badge priority-{{ task.priority.toLowerCase() }}">{{ priorityLabel(task.priority) }}</span>
+                    @if (task.dueDate) {
+                      <span class="item-meta">{{ task.dueDate | date: 'dd/MM/yyyy' }}</span>
+                    }
+                  </div>
+                </div>
+              }
+              @if (doneTasks().length === 0) {
+                <p class="empty-state">Aucune tache.</p>
+              }
+            </div>
+          </section>
+        </div>
+      }
+    }
+  </div>
+</div>

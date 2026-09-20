@@ -1,6 +1,7 @@
 import { Component, OnInit, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
+import { RouterLink } from '@angular/router';
 
 import { Project } from '../../core/models/project.model';
 import { Team, TeamMember, TeamRole } from '../../core/models/team.model';
@@ -10,7 +11,7 @@ import { TopNav } from '../../shared/top-nav/top-nav';
 
 @Component({
   selector: 'app-teams',
-  imports: [ReactiveFormsModule, TopNav],
+  imports: [ReactiveFormsModule, RouterLink, TopNav],
   templateUrl: './teams.html',
   styleUrl: './teams.css',
 })

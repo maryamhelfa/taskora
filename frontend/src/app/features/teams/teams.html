@@ -116,6 +116,7 @@
                     </span>
                     <span class="item-actions">
                       <span class="badge" [class.badge-primary]="project.status === 'ACTIVE'">{{ project.status }}</span>
+                      <a class="btn-link" [routerLink]="['/projects', project.id]">Ouvrir</a>
                       <button type="button" class="btn-link" (click)="startEditProject(project)">Modifier</button>
                       <button type="button" class="btn-secondary" (click)="toggleArchive(project)">
                         {{ project.status === 'ACTIVE' ? 'Archiver' : 'Reactiver' }}
