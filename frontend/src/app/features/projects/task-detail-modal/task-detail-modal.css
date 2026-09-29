@@ -1,7 +1,8 @@
 .modal-backdrop {
   position: fixed;
   inset: 0;
-  background: rgba(20, 24, 40, 0.45);
+  background: rgba(20, 20, 35, 0.45);
+  backdrop-filter: blur(2px);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -15,9 +16,9 @@
   max-height: calc(100vh - 3rem);
   overflow-y: auto;
   background: var(--color-surface);
-  border-radius: var(--radius);
-  padding: 1.5rem;
-  box-shadow: 0 12px 32px rgba(20, 24, 40, 0.25);
+  border-radius: var(--radius-lg);
+  padding: 1.75rem;
+  box-shadow: var(--shadow-lg);
 }
 
 .modal-header {
@@ -25,11 +26,13 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modal-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.1875rem;
 }
 
 .modal-meta {
@@ -37,7 +40,7 @@
   align-items: center;
   flex-wrap: wrap;
   gap: 0.75rem;
-  margin-bottom: 0.75rem;
+  margin-bottom: 0.85rem;
 }
 
 .task-description {
@@ -51,7 +54,7 @@
 }
 
 .modal-section h3 {
-  font-size: 1rem;
+  font-size: 0.9375rem;
   margin-bottom: 0.75rem;
 }
 
@@ -61,6 +64,12 @@
   gap: 0.6rem;
   cursor: pointer;
   width: 100%;
+}
+
+.subtask-label input[type='checkbox'] {
+  accent-color: var(--color-primary);
+  width: 16px;
+  height: 16px;
 }
 
 .subtask-label span.done {
